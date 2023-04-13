@@ -1,10 +1,10 @@
 from __future__ import absolute_import
 from keras import backend as K
 from keras.models import Model
-from keras.layers import Input, Dense, LSTM, Dropout, Convolution1D, MaxPooling1D,Flatten
-from keras.layers.wrappers import Bidirectional
+from keras.layers import Input, Dense, LSTM, Dropout, Conv1D, MaxPooling1D,Flatten
+from keras.layers import Bidirectional
 
-from keras.engine import merge
+from keras.layers import Concatenate
 
 
 class Network(Model):
@@ -57,8 +57,8 @@ class Network(Model):
             lstm = LSTM(num_units,
                         activation='tanh',
                         return_sequences=True,
-                        dropout_U=rec_dropout,
-                        dropout_W=dropout)
+                        dropout=rec_dropout,
+                        recurrent_dropout=dropout)
 
 
             if is_bidirectional:
@@ -69,8 +69,8 @@ class Network(Model):
         L = LSTM(dim,
                  activation='tanh',
                  return_sequences=True,
-                 dropout_W=dropout,
-                 dropout_U=rec_dropout)(X)
+                 dropout=dropout,
+                 recurrent_dropout=rec_dropout)(X)
 
         if dropout > 0:
             L = Dropout(dropout)(L)
@@ -79,17 +79,17 @@ class Network(Model):
         nb_filters=100
         pooling_reps = []
         for i in nfilters:
-            feat_maps = Convolution1D(nb_filter=nb_filters,
-                                      filter_length=i,
-                                      border_mode="valid",
-                                      activation="relu",
-                                      subsample_length=1)(L)
-            pool_vecs = MaxPooling1D(pool_length=2)(feat_maps)
+            feat_maps = Conv1D(filters=nb_filters,
+                               kernel_size=i,
+                               padding="valid",
+                               activation="relu",
+                               strides=1)(L)
+            pool_vecs = MaxPooling1D(pool_size=2)(feat_maps)
             pool_vecs = Flatten()(pool_vecs)
             pooling_reps.append(pool_vecs)
 
 
-        representation = merge(pooling_reps, mode='concat')
+        representation = Concatenate()(pooling_reps)
 
         representation = Dropout(self.drop_conv)(representation)
 

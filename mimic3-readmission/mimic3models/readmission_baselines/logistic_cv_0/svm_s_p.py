@@ -1,3 +1,6 @@
+import sys
+sys.path.append('/Users/lynngao/Desktop/MIMIC-III_ICU_Readmission_Analysis/mimic3-readmission/')
+
 import numpy as np
 import argparse
 import os
@@ -31,7 +34,7 @@ fig = plt.figure(figsize=(7,7))
 
 def read_diagnose(subject_path,icustay):
     diagnoses = dataframe_from_csv(os.path.join(subject_path, 'diagnoses.csv'), index_col=None)
-    diagnoses=diagnoses.ix[(diagnoses.ICUSTAY_ID==int(icustay))]
+    diagnoses=diagnoses.loc[(diagnoses.ICUSTAY_ID==int(icustay))]
     diagnoses=diagnoses['ICD9_CODE'].values.tolist()
 
     return diagnoses
@@ -128,14 +131,14 @@ def column_sum(M):
 embeddings, word_indices = get_embeddings(corpus='claims_codes_hs', dim=300)
 
 # Build readers, discretizers, normalizers
-train_reader = ReadmissionReader(dataset_dir='/Users/jeffrey0925/MIMIC-III-clean/readmission_cv2/data/',
-                                         listfile='/Users/jeffrey0925/MIMIC-III-clean/readmission_cv2/0_train_listfile801010.csv')
+train_reader = ReadmissionReader(dataset_dir='/Users/lynngao/Desktop/MIMIC-III_ICU_Readmission_Analysis/mimic3-readmission/data/readmission/',
+                                         listfile='/Users/lynngao/Desktop/MIMIC-III_ICU_Readmission_Analysis/mimic3-readmission/data/readmission/0_train_listfile801010.csv')
 
-val_reader = ReadmissionReader(dataset_dir='/Users/jeffrey0925/MIMIC-III-clean/readmission_cv2/data/',
-                                       listfile='/Users/jeffrey0925/MIMIC-III-clean/readmission_cv2/0_val_listfile801010.csv')
+val_reader = ReadmissionReader(dataset_dir='/Users/lynngao/Desktop/MIMIC-III_ICU_Readmission_Analysis/mimic3-readmission/data/readmission/',
+                                       listfile='/Users/lynngao/Desktop/MIMIC-III_ICU_Readmission_Analysis/mimic3-readmission/data/readmission/0_val_listfile801010.csv')
 
-test_reader = ReadmissionReader(dataset_dir='/Users/jeffrey0925/MIMIC-III-clean/readmission_cv2/data/',
-                                    listfile='/Users/jeffrey0925/MIMIC-III-clean/readmission_cv2/0_test_listfile801010.csv')
+test_reader = ReadmissionReader(dataset_dir='/Users/lynngao/Desktop/MIMIC-III_ICU_Readmission_Analysis/mimic3-readmission/data/readmission/',
+                                    listfile='/Users/lynngao/Desktop/MIMIC-III_ICU_Readmission_Analysis/mimic3-readmission/data/readmission/0_test_listfile801010.csv')
 
 
 discretizer = Discretizer(timestep=float(1.0),
@@ -149,7 +152,7 @@ data = ret["X"]
 ts = ret["t"]
 train_y = ret["y"]
 train_names = ret["name"]
-diseases_list=get_diseases(train_names, '/Users/jeffrey0925/MIMIC-III-clean/data/')
+diseases_list=get_diseases(train_names, '/Users/lynngao/Desktop/MIMIC-III_ICU_Readmission_Analysis/mimic3-readmission/data/root/')
 diseases_embedding=disease_embedding(embeddings, word_indices,diseases_list)
 
 d, discretizer_header, begin_pos, end_pos = discretizer.transform_reg(data[0])
@@ -232,7 +235,7 @@ ts_val = ret_val["t"]
 val_y= ret_val["y"]
 val_names = ret_val["name"]
 
-diseases_list_val=get_diseases(val_names, '/Users/jeffrey0925/MIMIC-III-clean/data/')
+diseases_list_val=get_diseases(val_names, '/Users/lynngao/Desktop/MIMIC-III_ICU_Readmission_Analysis/mimic3-readmission/data/root/')
 diseases_embedding_val=disease_embedding(embeddings, word_indices,diseases_list_val)
 
 
@@ -264,7 +267,7 @@ ts_test = ret_test["t"]
 test_y= ret_test["y"]
 test_names = ret_test["name"]
 
-diseases_list_test = get_diseases(test_names, '/Users/jeffrey0925/MIMIC-III-clean/data/')
+diseases_list_test = get_diseases(test_names, '/Users/lynngao/Desktop/MIMIC-III_ICU_Readmission_Analysis/mimic3-readmission/data/root/')
 diseases_embedding_test=disease_embedding(embeddings, word_indices,diseases_list_test)
 
 #----------
@@ -454,6 +457,6 @@ plt.legend(loc="lower right")
 
 
 
-fig.savefig('/Users/jeffrey0925/Downloads/mimic3-benchmarks-master/mimic3models/readmission3/logistic_cv_0/ROC0.png')
+fig.savefig('/Users/lynngao/Desktop/MIMIC-III_ICU_Readmission_Analysis/mimic3-readmission/mimic3models/readmission_baselines/logistic_cv_0/ROC0.png')
 
 plt.show()

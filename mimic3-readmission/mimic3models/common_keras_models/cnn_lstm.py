@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 from keras.models import Model
 from keras.layers import Input, Dense, LSTM, Masking, Dropout, Convolution1D, MaxPooling1D
-from keras.layers.wrappers import Bidirectional
+from keras.layers import Bidirectional
 
 from keras.engine import merge
 

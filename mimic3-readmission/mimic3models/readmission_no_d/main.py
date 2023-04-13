@@ -1,3 +1,6 @@
+import sys
+sys.path.append('/Users/lynngao/Desktop/MIMIC-III_ICU_Readmission_Analysis/mimic3-readmission/')
+
 import numpy as np
 import argparse
 import os
@@ -22,7 +25,7 @@ from utilities.data_loader import get_embeddings
 
 def read_diagnose(subject_path,icustay):
     diagnoses = dataframe_from_csv(os.path.join(subject_path, 'diagnoses.csv'), index_col=None)
-    diagnoses=diagnoses.ix[(diagnoses.ICUSTAY_ID==int(icustay))]
+    diagnoses=diagnoses.loc[(diagnoses.ICUSTAY_ID==int(icustay))]
     diagnoses=diagnoses['ICD9_CODE'].values.tolist()
 
     return diagnoses
@@ -70,11 +73,11 @@ target_repl = (args.target_repl_coef > 0.0 and args.mode == 'train')
 embeddings, word_indices = get_embeddings(corpus='claims_codes_hs', dim=300)
 
 # Build readers, discretizers, normalizers
-train_reader = ReadmissionReader(dataset_dir='/Users/jeffrey0925/MIMIC-III-clean/readmission_cv2/data/',
-                                         listfile='/Users/jeffrey0925/MIMIC-III-clean/readmission_cv2/0_train_listfile801010.csv')
+train_reader = ReadmissionReader(dataset_dir='/Users/lynngao/Desktop/MIMIC-III_ICU_Readmission_Analysis/mimic3-readmission/data/readmission/',
+                                         listfile='/Users/lynngao/Desktop/MIMIC-III_ICU_Readmission_Analysis/mimic3-readmission/data/readmission/0_train_listfile801010.csv')
 
-val_reader = ReadmissionReader(dataset_dir='/Users/jeffrey0925/MIMIC-III-clean/readmission_cv2/data/',
-                                       listfile='/Users/jeffrey0925/MIMIC-III-clean/readmission_cv2/0_val_listfile801010.csv')
+val_reader = ReadmissionReader(dataset_dir='/Users/lynngao/Desktop/MIMIC-III_ICU_Readmission_Analysis/mimic3-readmission/data/readmission/',
+                                       listfile='/Users/lynngao/Desktop/MIMIC-III_ICU_Readmission_Analysis/mimic3-readmission/data/readmission/0_val_listfile801010.csv')
 
 
 discretizer = Discretizer(timestep=float(args.timestep),
@@ -88,7 +91,7 @@ data = ret["X"]
 ts = ret["t"]
 labels = ret["y"]
 names = ret["name"]
-diseases_list=get_diseases(names, '/Users/jeffrey0925/MIMIC-III-clean/data/')
+diseases_list=get_diseases(names, '/Users/lynngao/Desktop/MIMIC-III_ICU_Readmission_Analysis/mimic3-readmission/data/root/')
 diseases_embedding=disease_embedding(embeddings, word_indices,diseases_list)
 
 
@@ -131,7 +134,7 @@ loss_weights = None
 print(model)
 #print(optimizer_config)
 #model.compile(optimizer=optimizer_config, loss=loss,loss_weights=loss_weights)
-model.compile(optimizer=Adam(lr=0.001, beta_1=0.9), loss=loss,loss_weights=loss_weights)
+model.compile(optimizer=Adam(learning_rate=0.001, beta_1=0.9), loss=loss,loss_weights=loss_weights)
 #model.compile(optimizer=Adam(clipnorm=1., lr=0.001), loss='binary_crossentropy', metrics=["binary_accuracy"])
 
 model.summary()
@@ -158,7 +161,7 @@ N1=val_reader.get_number_of_examples()
 ret1 = common_utils.read_chunk(val_reader, N1)
 
 names1 = ret1["name"]
-diseases_list1=get_diseases(names1, '/Users/jeffrey0925/MIMIC-III-clean/data/')
+diseases_list1=get_diseases(names1, '/Users/lynngao/Desktop/MIMIC-III_ICU_Readmission_Analysis/mimic3-readmission/data/root/')
 diseases_embedding1=disease_embedding(embeddings, word_indices,diseases_list1)
 val_raw = utils.load_data(val_reader, discretizer, normalizer, diseases_embedding1)
 
@@ -191,7 +194,7 @@ if args.mode == 'train':
     dirname = os.path.dirname(path)
     if not os.path.exists(dirname):
         os.makedirs(dirname)
-    saver = ModelCheckpoint(path, verbose=1, period=args.save_every)
+    saver = ModelCheckpoint(path, verbose=1, save_freq=args.save_every)
 
     if not os.path.exists('keras_logs'):
         os.makedirs('keras_logs')
@@ -202,7 +205,7 @@ if args.mode == 'train':
     model.fit(x=train_raw[0],
               y=train_raw[1],
               validation_data=val_raw,
-              nb_epoch=n_trained_chunks + args.epochs,
+              epoch=n_trained_chunks + args.epochs,
               initial_epoch=n_trained_chunks,
               callbacks=[metrics_callback, saver, csv_logger],
               shuffle=True,
@@ -217,14 +220,14 @@ elif args.mode == 'test':
     del train_raw
     del val_raw
 
-    test_reader = ReadmissionReader(dataset_dir='/Users/jeffrey0925/MIMIC-III-clean/readmission_cv2/data/',
-                                    listfile='/Users/jeffrey0925/MIMIC-III-clean/readmission_cv2/0_test_listfile801010.csv')
+    test_reader = ReadmissionReader(dataset_dir='/Users/lynngao/Desktop/MIMIC-III_ICU_Readmission_Analysis/mimic3-readmission/data/readmission/',
+                                    listfile='/Users/lynngao/Desktop/MIMIC-III_ICU_Readmission_Analysis/mimic3-readmission/data/readmission/0_test_listfile801010.csv')
 
     N = test_reader.get_number_of_examples()
     re = common_utils.read_chunk(test_reader, N)
 
     names = re["name"]
-    diseases_list = get_diseases(names, '/Users/jeffrey0925/MIMIC-III-clean/data/')
+    diseases_list = get_diseases(names, '/Users/lynngao/Desktop/MIMIC-III_ICU_Readmission_Analysis/mimic3-readmission/data/root/')
     diseases_embedding = disease_embedding(embeddings, word_indices, diseases_list)
 
     ret = utils.load_data(test_reader, discretizer, normalizer, diseases_embedding,return_names=True)

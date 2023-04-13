@@ -39,7 +39,7 @@ def load_train_data(reader, discretizer, normalizer, diseases_embedding, return_
     ts = ret["t"]
     labels = ret["y"]
     names = ret["name"]
-    data = [discretizer.transform_first_t_hours(X, los=t)[0] for (X, t) in zip(data, ts)]
+    data = [discretizer.transform_first_t_hours(X, end=t)[0] for (X, t) in zip(data, ts)]
 
 
 

@@ -87,7 +87,7 @@ stays['DISCHARGE_DIE']=stays.DOD-stays.DISCHTIME
 stays['DIE_LESS_TAHN_30DAYS']=(stays.MORTALITY==1) & (stays.MORTALITY_INHOSPITAL==0) & (stays.MORTALITY_INUNIT==0) & (stays.DISCHARGE_DIE<'30 days 00:00:00')
 stays['DIE_LESS_TAHN_30DAYS']=stays['DIE_LESS_TAHN_30DAYS'].astype(int)
 stays['READMISSION'] = ((stays.TRANSFERBACK==1) | (stays.DIEINWARD==1) | (stays.LESS_TAHN_30DAYS==1) | (stays.DIE_LESS_TAHN_30DAYS==1)).astype(int)
-stays.ix[(stays.MORTALITY == 1) & (stays.MORTALITY_INHOSPITAL == 1) & (stays.MORTALITY_INUNIT == 1), 'READMISSION'] = 2
+stays.loc[(stays.MORTALITY == 1) & (stays.MORTALITY_INHOSPITAL == 1) & (stays.MORTALITY_INUNIT == 1), 'READMISSION'] = 2
 print(stays[['ICUSTAY_ID','MORTALITY','MORTALITY_INHOSPITAL','MORTALITY_INUNIT','TRANSFERBACK','DIEINWARD','LESS_TAHN_30DAYS','DIE_LESS_TAHN_30DAYS','READMISSION']])
 #----------------
 #stays['NEXT_ADMITTIME']=stays.ADMITTIME.shift(-1)
@@ -160,7 +160,7 @@ for subject_dir in os.listdir(args.subjects_root_path):
     # ----------------
     stays['READMISSION'] = ((stays.TRANSFERBACK==1) | (stays.DIEINWARD==1) | (stays.LESS_TAHN_30DAYS==1) | (stays.DIE_LESS_TAHN_30DAYS==1)).astype(int)
 
-    stays.ix[(stays.MORTALITY == 1) & (stays.MORTALITY_INHOSPITAL == 1) & (stays.MORTALITY_INUNIT == 1), 'READMISSION'] = 2
+    stays.loc[(stays.MORTALITY == 1) & (stays.MORTALITY_INHOSPITAL == 1) & (stays.MORTALITY_INUNIT == 1), 'READMISSION'] = 2
     stays.to_csv(os.path.join(args.subjects_root_path, subject_dir, 'stays_readmission.csv'), index=False)
 
     sys.stdout.write(' DONE!\n')

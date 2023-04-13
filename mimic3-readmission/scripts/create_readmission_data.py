@@ -44,6 +44,7 @@ def process_partition(eps=1e-6):
     for (patient_index, patient) in enumerate(patients):
         patient_folder = os.path.join(args.root_path, patient)
         patient_ts_files = list(filter(lambda x: x.find("timeseries_readmission.csv") != -1, os.listdir(patient_folder)))
+        print(patient_ts_files)
         patient_daty_count=0
         for ts_filename in patient_ts_files:
             with open(os.path.join(patient_folder, ts_filename)) as tsfile:

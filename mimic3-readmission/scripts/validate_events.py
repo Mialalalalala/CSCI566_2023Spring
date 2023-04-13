@@ -1,8 +1,10 @@
+from __future__ import absolute_import
 from __future__ import print_function
+
 import os
 import argparse
 import pandas as pd
-import os.path
+from tqdm import tqdm
 
 
 def is_subject_folder(x):
@@ -28,10 +30,7 @@ def main():
     subdirectories = os.listdir(args.subjects_root_path)
     subjects = list(filter(is_subject_folder, subdirectories))
 
-    for (index, subject) in enumerate(subjects):
-        if index % 100 == 0:
-            print("processed {} / {} {}\r".format(index+1, len(subjects), ' '*10))
-
+    for subject in tqdm(subjects, desc='Iterating over subjects'):
         stays_df = pd.read_csv(os.path.join(args.subjects_root_path, subject, 'stays.csv'), index_col=False,
                                dtype={'HADM_ID': str, "ICUSTAY_ID": str})
         stays_df.columns = stays_df.columns.str.upper()
@@ -43,11 +42,10 @@ def main():
         # assert there are no repetitions of ICUSTAY_ID or HADM_ID
         # since admissions with multiple ICU stays were excluded
         assert(len(stays_df['ICUSTAY_ID'].unique()) == len(stays_df['ICUSTAY_ID']))
-        #assert(len(stays_df['HADM_ID'].unique()) == len(stays_df['HADM_ID']))
-        if os.path.isfile(os.path.join(args.subjects_root_path, subject, 'events.csv'))==False:
-            continue
+        assert(len(stays_df['HADM_ID'].unique()) == len(stays_df['HADM_ID']))
+
         events_df = pd.read_csv(os.path.join(args.subjects_root_path, subject, 'events.csv'), index_col=False,
-                                dtype={'HADM_ID': str, "ICUSTAY_ID": str})
+                                dtype={'HADM_ID': str, "ICUSTAY_ID": str}, low_memory=False)
         events_df.columns = events_df.columns.str.upper()
         n_events += events_df.shape[0]
 

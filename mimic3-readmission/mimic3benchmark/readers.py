@@ -1,3 +1,6 @@
+from __future__ import absolute_import
+from __future__ import print_function
+
 import os
 import numpy as np
 import random
@@ -20,7 +23,7 @@ class Reader(object):
         return len(self._data)
 
     def random_shuffle(self, seed=None):
-        if (seed is not None):
+        if seed is not None:
             random.seed(seed)
         random.shuffle(self._data)
 
@@ -30,10 +33,61 @@ class Reader(object):
     def read_next(self):
         to_read_index = self._current_index
         self._current_index += 1
-        if (self._current_index == self.get_number_of_examples()):
+        if self._current_index == self.get_number_of_examples():
             self._current_index = 0
         return self.read_example(to_read_index)
 
+class ReadmissionReader(Reader):
+    def __init__(self, dataset_dir, listfile=None):
+        """ Reader for phenotype classification task.
+        :param dataset_dir: Directory where timeseries files are stored.
+        :param listfile:    Path to a listfile. If this parameter is left `None` then
+                            `dataset_dir/listfile.csv` will be used.
+        """
+        Reader.__init__(self, dataset_dir, listfile)
+        self._data = [line.split(',') for line in self._data]
+        self._data = [(x, float(t), int(y)) for (x, t, y) in self._data]
+
+    def _read_timeseries(self, ts_filename):
+        ret = []
+        with open(os.path.join(self._dataset_dir, ts_filename), "r") as tsfile:
+            header = tsfile.readline().strip().split(',')
+            assert header[0] == "Hours"
+            for line in tsfile:
+                mas = line.strip().split(',')
+                ret.append(np.array(mas))
+        return (np.stack(ret), header)
+
+    def read_example(self, index):
+        """ Reads the example with given index.
+        :param index: Index of the line of the listfile to read (counting starts from 0).
+        :return: Dictionary with the following keys:
+            X : np.array
+                2D array containing all events. Each row corresponds to a moment.
+                First column is the time and other columns correspond to different
+                variables.
+            t : float
+                Length of the data in hours. Note, in general, it is not equal to the
+                timestamp of last event.
+            y : array of ints
+                Phenotype labels.
+            header : array of strings
+                Names of the columns. The ordering of the columns is always the same.
+            name: Name of the sample.
+        """
+        if (index < 0 or index >= len(self._data)):
+            raise ValueError("Index must be from 0 (inclusive) to number of lines (exclusive).")
+
+        name = self._data[index][0]
+        t = self._data[index][1]
+        y = self._data[index][2]
+        (X, header) = self._read_timeseries(name)
+
+        return {"X": X,
+                "t": t,
+                "y": y,
+                "header": header,
+                "name": name}
 
 class DecompensationReader(Reader):
     def __init__(self, dataset_dir, listfile=None):
@@ -77,7 +131,7 @@ class DecompensationReader(Reader):
                 Names of the columns. The ordering of the columns is always the same.
             name: Name of the sample.
         """
-        if (index < 0 or index >= len(self._data)):
+        if index < 0 or index >= len(self._data):
             raise ValueError("Index must be from 0 (inclusive) to number of examples (exclusive).")
 
         name = self._data[index][0]
@@ -104,7 +158,6 @@ class InHospitalMortalityReader(Reader):
         Reader.__init__(self, dataset_dir, listfile)
         self._data = [line.split(',') for line in self._data]
         self._data = [(x, int(y)) for (x, y) in self._data]
-        #print(self._data)
         self._period_length = period_length
 
     def _read_timeseries(self, ts_filename):
@@ -135,71 +188,13 @@ class InHospitalMortalityReader(Reader):
                 Names of the columns. The ordering of the columns is always the same.
             name: Name of the sample.
         """
-        if (index < 0 or index >= len(self._data)):
+        if index < 0 or index >= len(self._data):
             raise ValueError("Index must be from 0 (inclusive) to number of lines (exclusive).")
 
-        #file name e.g.,10000_episode1_timeseries_readmission
         name = self._data[index][0]
-        #
         t = self._period_length
         y = self._data[index][1]
         (X, header) = self._read_timeseries(name)
-        #print("X", X, "t", t, "y", y, "header", header, "name", name)
-        return {"X": X,
-                "t": t,
-                "y": y,
-                "header": header,
-                "name": name}
-#==================
-
-class ReadmissionReader(Reader):
-    def __init__(self, dataset_dir, listfile=None):
-        """ Reader for phenotype classification task.
-
-        :param dataset_dir: Directory where timeseries files are stored.
-        :param listfile:    Path to a listfile. If this parameter is left `None` then
-                            `dataset_dir/listfile.csv` will be used.
-        """
-        Reader.__init__(self, dataset_dir, listfile)
-        self._data = [line.split(',') for line in self._data]
-        self._data = [(x, float(t), int(y)) for (x, t, y) in self._data]
-
-
-    def _read_timeseries(self, ts_filename):
-        ret = []
-        with open(os.path.join(self._dataset_dir, ts_filename), "r") as tsfile:
-            header = tsfile.readline().strip().split(',')
-            assert header[0] == "Hours"
-            for line in tsfile:
-                mas = line.strip().split(',')
-                ret.append(np.array(mas))
-        return (np.stack(ret), header)
-
-    def read_example(self, index):
-        """ Reads the example with given index.
-
-        :param index: Index of the line of the listfile to read (counting starts from 0).
-        :return: Dictionary with the following keys:
-            X : np.array
-                2D array containing all events. Each row corresponds to a moment.
-                First column is the time and other columns correspond to different
-                variables.
-            t : float
-                Length of the data in hours. Note, in general, it is not equal to the
-                timestamp of last event.
-            y : array of ints
-                Phenotype labels.
-            header : array of strings
-                Names of the columns. The ordering of the columns is always the same.
-            name: Name of the sample.
-        """
-        if (index < 0 or index >= len(self._data)):
-            raise ValueError("Index must be from 0 (inclusive) to number of lines (exclusive).")
-
-        name = self._data[index][0]
-        t = self._data[index][1]
-        y = self._data[index][2]
-        (X, header) = self._read_timeseries(name)
 
         return {"X": X,
                 "t": t,
@@ -207,7 +202,7 @@ class ReadmissionReader(Reader):
                 "header": header,
                 "name": name}
 
-#==================
+
 class LengthOfStayReader(Reader):
     def __init__(self, dataset_dir, listfile=None):
         """ Reader for length of stay prediction task.
@@ -251,7 +246,7 @@ class LengthOfStayReader(Reader):
                 Names of the columns. The ordering of the columns is always the same.
             name: Name of the sample.
         """
-        if (index < 0 or index >= len(self._data)):
+        if index < 0 or index >= len(self._data):
             raise ValueError("Index must be from 0 (inclusive) to number of lines (exclusive).")
 
         name = self._data[index][0]
@@ -276,7 +271,7 @@ class PhenotypingReader(Reader):
         """
         Reader.__init__(self, dataset_dir, listfile)
         self._data = [line.split(',') for line in self._data]
-        self._data = [(mas[0], float(mas[1]), map(int, mas[2:])) for mas in self._data]
+        self._data = [(mas[0], float(mas[1]), list(map(int, mas[2:]))) for mas in self._data]
 
     def _read_timeseries(self, ts_filename):
         ret = []
@@ -306,7 +301,7 @@ class PhenotypingReader(Reader):
                 Names of the columns. The ordering of the columns is always the same.
             name: Name of the sample.
         """
-        if (index < 0 or index >= len(self._data)):
+        if index < 0 or index >= len(self._data):
             raise ValueError("Index must be from 0 (inclusive) to number of lines (exclusive).")
 
         name = self._data[index][0]
@@ -333,22 +328,22 @@ class MultitaskReader(Reader):
         self._data = [line.split(',') for line in self._data]
 
         def process_ihm(x):
-            return map(int, x.split(';'))
+            return list(map(int, x.split(';')))
 
         def process_los(x):
             x = x.split(';')
             if x[0] == '':
                 return ([], [])
-            return (map(int, x[:len(x)/2]), map(float, x[len(x)/2:]))
+            return (list(map(int, x[:len(x)//2])), list(map(float, x[len(x)//2:])))
 
         def process_ph(x):
-            return map(int, x.split(';'))
+            return list(map(int, x.split(';')))
 
         def process_decomp(x):
             x = x.split(';')
             if x[0] == '':
                 return ([], [])
-            return (map(int, x[:len(x)/2]), map(int, x[len(x)/2:]))
+            return (list(map(int, x[:len(x)//2])), list(map(int, x[len(x)//2:])))
 
         self._data = [(fname, float(t), process_ihm(ihm), process_los(los),
                        process_ph(pheno), process_decomp(decomp))
@@ -388,7 +383,7 @@ class MultitaskReader(Reader):
                 Names of the columns. The ordering of the columns is always the same.
             name: Name of the sample.
         """
-        if (index < 0 or index >= len(self._data)):
+        if index < 0 or index >= len(self._data):
             raise ValueError("Index must be from 0 (inclusive) to number of lines (exclusive).")
 
         name = self._data[index][0]

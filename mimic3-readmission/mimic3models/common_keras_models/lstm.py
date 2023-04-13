@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 from keras.models import Model
 from keras.layers import Input, Dense, LSTM, Masking, Dropout
-from keras.layers.wrappers import Bidirectional
+from keras.layers import Bidirectional
 
 
 class Network(Model):
@@ -54,8 +54,8 @@ class Network(Model):
             lstm = LSTM(num_units,
                         activation='tanh',
                         return_sequences=True,
-                        dropout_U=rec_dropout,
-                        dropout_W=dropout)
+                        recurrent_dropout=rec_dropout,
+                        dropout=dropout)
 
 
             if is_bidirectional:
@@ -75,8 +75,8 @@ class Network(Model):
         L = LSTM(dim,
                  activation='tanh',
                  return_sequences=return_sequences,
-                 dropout_W=dropout,
-                 dropout_U=rec_dropout)(mX)
+                 dropout=dropout,
+                 recurrent_dropout=rec_dropout)(mX)
 
         if dropout > 0:
             L = Dropout(dropout)(L)
@@ -85,8 +85,7 @@ class Network(Model):
         y = Dense(num_classes, activation=final_activation)(L)
         outputs = [y]
 
-        return super(Network, self).__init__(inputs,
-                                             outputs)
+        super(Network, self).__init__(inputs, outputs)
 
     def say_name(self):
         self.network_class_name = "k_lstm"
