@@ -28,3 +28,7 @@ The codes for this part is adapted from this [paper](https://www.biorxiv.org/con
 ```
 
 ### Part II: Baseline models and LSTM models
+```
+Baseline: CSCI566_project_baseline.ipynb
+LSTM: LSTM_baseline+LDAM.py
+```
